@@ -1,6 +1,9 @@
+//* DEPENDENCIES *//
+
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 
+// create the connection information for the sql database
 var connection = mysql.createConnection({
   host: "localhost",
   port: 3306,
@@ -13,19 +16,21 @@ var connection = mysql.createConnection({
   database: "bamazon_db"
 });
 
+// connect to the mysql server and sql database
 connection.connect(function(err) {
   if (err) throw err;
+  // log to see our connection.
   console.log("connected as id " + connection.threadId);
+  // run the displayProducts function to list the items for sale.
   displayProducts();
 });
 
-
+// function that queries out mysql products table and list the items for sale.
 function displayProducts() {
   console.log('');
   console.log("These are the items we have available...\n");
   connection.query("SELECT * FROM products", function(err, res) {
     if (err) throw err;
-
     // loop through the products we have available and display the item_id, prodict_name and price.
     for (var i = 0; i < res.length; i++) {
       // Log all results of the SELECT statement
@@ -36,7 +41,7 @@ function displayProducts() {
   }); // end of query
 } // end of displayProducts function
 
-// create a function using inquirer to ask the customer to chose an item by ID and how many of it they want.
+// function using inquirer to ask the customer to chose an item by ID and how many of it they want.
 function promptCustomerOrder() {
   console.log(""); // add a blank line for readability.
   // Prompt the user to chose the item by ID and how many unit s they want to buy.
@@ -59,16 +64,23 @@ function promptCustomerOrder() {
       var quantityWanted = answer.howMany;
 
       connection.query("SELECT * FROM products WHERE item_id = ?", (item), function(err, res) {
+        if (err) throw err;
 
         var thisItem = res[0];
         var totalQuantity = thisItem.stock_quantity;
 
         if (quantityWanted > totalQuantity) {
-          console.log("Insufficient quantity!");
-          connection.end();
+          console.log('');
+          console.log("----------------------------------------------------------------------");
+          console.log("Insufficient quantity! Please choose another item or a lower quantity.");
+          console.log("----------------------------------------------------------------------");
+          // list the items for sale again.
+          displayProducts();
         }
         else {
+          // call the function to update the quantity of the item purchased in our products table.
           updateProduct(quantityWanted, totalQuantity, item);
+          // call the function to process the order
           processOrder(quantityWanted, item);
         }
       }) // end of connection.query
@@ -82,7 +94,7 @@ function updateProduct(quantityWanted, totalQuantity, item) {
   var newQuantity = totalQuantity - quantityWanted;
 
   console.log("");
-  console.log("The quantity for the puchased items are being adjusted...");
+  console.log("The quantity for the purchased items are being adjusted...");
   console.log("There are " + newQuantity + " left of this item.");
 
   var query = connection.query("UPDATE products SET ? WHERE ?",
@@ -94,6 +106,7 @@ function updateProduct(quantityWanted, totalQuantity, item) {
         item_id: item // the chosen item from the prompt above
       }
     ], function(err, res) {
+      if (err) throw err;
     }
   ); // end of query
 } // end of updateProduct function
@@ -103,13 +116,15 @@ function processOrder(quantityWanted, item) {
   console.log(""); // add a blank line for readability.
 
   var query = connection.query("SELECT * FROM products WHERE ?", {item_id: item}, function(err, res) {
+    if (err) throw err;
 
     var itemPrice = res[0].price;
     var totalCost = parseFloat(itemPrice * quantityWanted).toFixed(2); // makes sure the price has only two decimal points
     var itemName = res[0].product_name;
     // log the total price of the desired quantities.
+    console.log("----------------------------------------------------------------------------");
     console.log("The total cost for " + quantityWanted + " " + itemName + " is: $" + totalCost);
-    console.log("");
+    console.log("----------------------------------------------------------------------------");
 
     // list the products again for continued shopping.
     displayProducts();
