@@ -64,6 +64,7 @@ function viewProducts() {
         console.log(res[i].item_id + ". " + res[i].product_name + " $" + parseFloat(res[i].price).toFixed(2) + " Quantity: " + res[i].stock_quantity);
       }
     }) // end of SELECT query
+    // promptManager();
 } // end of viewProducts function.
 
 // function that allows the manager to view items that have five or fewer units left.
@@ -78,4 +79,83 @@ function viewLowInventory() {
         console.log(res[i].item_id + ". " + res[i].product_name + " $" + parseFloat(res[i].price).toFixed(2) + " Quantity: " + res[i].stock_quantity);
       }
   }) // end of SELECT query
+  // promptManager();
 } // end of viewLowInventory function;
+
+// function to ask manager which items to add more units to.
+function addInventory() {
+  inquirer.prompt([
+    {
+      name: "choice",
+      type: "input",
+      message: "Enter the product ID for the product you want to update."
+    }
+  ]).then(function(answer){
+    // console.log(answer.choice);
+    itemID = answer.choice
+    connection.query("SELECT * FROM products WHERE ?", {item_id: itemID}, function(err, res){
+        if (err) throw err;
+          // Log all results of the SELECT statement
+          console.log(res[0].item_id + ". " + res[0].product_name + " Quantity: " + res[0].stock_quantity);
+          currentQuantity =  res[0].stock_quantity;
+          confirmChoice(itemID, currentQuantity);
+    }) // end of SELECT query
+  }) //end of .then promise.
+} // end of addInventory function.
+
+function confirmChoice(itemID, currentQuantity) {
+  // console.log(itemID);
+  // console.log(currentQuantity);
+  inquirer.prompt([
+    {
+      type: "confirm",
+      message: "Is this the item you want to add?",
+      name: "confirm",
+      default: true
+    },
+    {
+      type: "input",
+      message: "How many units would you like to add to the inventory?",
+      name: "units"
+    },
+    {
+      name: "choice",
+      type: "input",
+      message: "Enter the product ID for the product you want to update again."
+    }
+  ]).then(function(response){
+    if (response.confirm) {
+      console.log(itemID);
+      var quantity = response.units;
+      var itemID = response.choice;
+      connection.query("SELECT * FROM products WHERE ?", {item_id: itemID}, function(err, res){
+          if (err) throw err;
+            // Log all results of the SELECT statement
+            console.log(res[0].item_id + ". " + res[0].product_name + " Quantity: " + res[0].stock_quantity);
+            currentQuantity =  res[0].stock_quantity;
+            newTotal = parseInt(quantity) + parseInt(currentQuantity);
+            updateInventory(itemID, newTotal);
+      }) // end of SELECT query
+    }
+  })
+} // end of confirm Choice function.
+
+// function to update the inventory from the manager's entries
+function updateInventory(itemID, newTotal) {
+  console.log("");
+  console.log("The quantity for product #" + itemID + " is being updated...");
+  console.log("There are now " + newTotal + " of this item.");
+
+  var query = connection.query("UPDATE products SET ? WHERE ?",
+    [
+      {
+        stock_quantity: newTotal
+      },
+      {
+        item_id: itemID // the chosen item from the prompt above
+      }
+    ], function(err, res) {
+      if (err) throw err;
+    }
+  ); // end of query
+}
