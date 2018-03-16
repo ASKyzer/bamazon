@@ -159,3 +159,50 @@ function updateInventory(itemID, newTotal) {
     }
   ); // end of query
 }
+
+function addProducts() {
+  inquirer.prompt([
+    {
+      name: "productName",
+      type: "input",
+      message: "What is the name of the item you want to add?",
+    },
+    {
+      name: "productDept",
+      type: "input",
+      message: "What department item you want to add belong in?",
+    },
+    {
+      name: "productPrice",
+      type: "input",
+      message: "Enter price",
+    },
+    {
+      name: "productQuantity",
+      type: "input",
+      message: "Enter quantity",
+    }
+  ]).then(function(res){
+    var name = res.productName;
+    var dept = res.productDept;
+    var cost = res.productPrice;
+    var quant = res.productQuantity;
+    createProduct(name, dept, cost, quant);
+  })
+}
+
+function createProduct(name, dept, cost, quant) {
+  var query = connection.query(
+    "INSERT INTO products SET ?",
+    {
+      product_name: name,
+      department_name: dept,
+      price: cost,
+      stock_quantity: quant
+    },
+    function(err, res) {
+      console.log(res.affectedRows + " product inserted!\n");
+      // Call updateProduct AFTER the INSERT completes
+    }
+  );
+}
