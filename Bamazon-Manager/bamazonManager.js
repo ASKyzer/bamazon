@@ -51,3 +51,16 @@ function promptManager() {
         }
     }) // end of .then promise.
 } // end of promptManager fuction.
+
+// function which displays all items in our products table.
+function viewProducts() {
+  console.log("");
+  connection.query("SELECT * FROM products", function(err, res){
+      if (err) throw err;
+      // loop through the products we have available and display the item_id, prodict_name and price.
+      for (var i = 0; i < res.length; i++) {
+        // Log all results of the SELECT statement
+        console.log(res[i].item_id + ". " + res[i].product_name + " $" + parseFloat(res[i].price).toFixed(2) + " Quantity: " + res[i].stock_quantity);
+      }
+    })
+} // end of viewProducts function.
