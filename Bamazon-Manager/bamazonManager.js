@@ -27,6 +27,7 @@ connection.connect(function(err) {
 
 // function that asks the manage a few choices using a switch/case.
 function promptManager() {
+  console.log("");
     inquirer.prompt([
       {
         name: "task",
@@ -84,6 +85,7 @@ function viewLowInventory() {
 
 // function to ask manager which items to add more units to.
 function addInventory() {
+  console.log("");
   inquirer.prompt([
     {
       name: "choice",
@@ -96,6 +98,7 @@ function addInventory() {
     connection.query("SELECT * FROM products WHERE ?", {item_id: itemID}, function(err, res){
         if (err) throw err;
           // Log all results of the SELECT statement
+          console.log("");
           console.log(res[0].item_id + ". " + res[0].product_name + " Quantity: " + res[0].stock_quantity);
           currentQuantity =  res[0].stock_quantity;
           confirmChoice(itemID, currentQuantity);
@@ -104,8 +107,7 @@ function addInventory() {
 } // end of addInventory function.
 
 function confirmChoice(itemID, currentQuantity) {
-  // console.log(itemID);
-  // console.log(currentQuantity);
+  console.log("");
   inquirer.prompt([
     {
       type: "confirm",
@@ -124,8 +126,8 @@ function confirmChoice(itemID, currentQuantity) {
       message: "Enter the product ID for the product you want to update again."
     }
   ]).then(function(response){
+    console.log("");
     if (response.confirm) {
-      console.log(itemID);
       var quantity = response.units;
       var itemID = response.choice;
       connection.query("SELECT * FROM products WHERE ?", {item_id: itemID}, function(err, res){
@@ -161,6 +163,7 @@ function updateInventory(itemID, newTotal) {
 }
 
 function addProducts() {
+  console.log("");
   inquirer.prompt([
     {
       name: "productName",
@@ -192,6 +195,7 @@ function addProducts() {
 }
 
 function createProduct(name, dept, cost, quant) {
+  console.log("");
   var query = connection.query(
     "INSERT INTO products SET ?",
     {
@@ -203,6 +207,8 @@ function createProduct(name, dept, cost, quant) {
     function(err, res) {
       console.log(res.affectedRows + " product inserted!\n");
       // Call updateProduct AFTER the INSERT completes
+      viewProducts();
+
     }
   );
-}
+} // end of createProduct function.
