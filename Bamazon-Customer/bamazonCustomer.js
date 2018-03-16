@@ -21,6 +21,7 @@ connection.connect(function(err) {
 
 
 function displayProducts() {
+  console.log('');
   console.log("These are the items we have available...\n");
   connection.query("SELECT * FROM products", function(err, res) {
     if (err) throw err;
@@ -30,11 +31,13 @@ function displayProducts() {
       // Log all results of the SELECT statement
       console.log(res[i].item_id, res[i].product_name, res[i].price);
     }
-    customerOrder();
-  });
-}
+    // after we display the available products, we prompt the customer's order.
+    promptCustomerOrder();
+  }); // end of query
+} // end of displayProducts function
 
-function customerOrder() {
+// create a function using inquirer to ask the customer to chose an item by ID and how many of it they want.
+function promptCustomerOrder() {
   console.log(""); // add a blank line for readability.
   // Prompt the user to chose the item by ID and how many unit s they want to buy.
   inquirer
@@ -56,9 +59,9 @@ function customerOrder() {
       var quantityWanted = answer.howMany;
 
       connection.query("SELECT * FROM products WHERE item_id = ?", (item), function(err, res) {
+
         var thisItem = res[0];
         var totalQuantity = thisItem.stock_quantity;
-        console.log(totalQuantity);
 
         if (quantityWanted > totalQuantity) {
           console.log("Insufficient quantity!");
@@ -76,10 +79,12 @@ function customerOrder() {
 // update the products table with fewer stock_quantity
 function updateProduct(quantityWanted, totalQuantity, item) {
 
+  var newQuantity = totalQuantity - quantityWanted;
+
   console.log("");
   console.log("The quantity for the puchased items are being adjusted...");
+  console.log("There are " + newQuantity + " left of this item.");
 
-  var newQuantity = totalQuantity - quantityWanted;
   var query = connection.query("UPDATE products SET ? WHERE ?",
     [
       {
@@ -89,25 +94,25 @@ function updateProduct(quantityWanted, totalQuantity, item) {
         item_id: item // the chosen item from the prompt above
       }
     ], function(err, res) {
-
     }
-  );
-  // log the actual query being run
-  console.log(query.sql);
-}
+  ); // end of query
+} // end of updateProduct function
 
 function processOrder(quantityWanted, item) {
+
   console.log(""); // add a blank line for readability.
-  console.log(quantityWanted);
-  console.log(item);
 
   var query = connection.query("SELECT * FROM products WHERE ?", {item_id: item}, function(err, res) {
-    console.log(res[0]);
+
     var itemPrice = res[0].price;
-    var totalCost = itemPrice * quantityWanted;
+    var totalCost = parseFloat(itemPrice * quantityWanted).toFixed(2); // makes sure the price has only two decimal points
     var itemName = res[0].product_name;
     // log the total price of the desired quantities.
     console.log("The total cost for " + quantityWanted + " " + itemName + " is: $" + totalCost);
-  })
+    console.log("");
 
+    // list the products again for continued shopping.
+    displayProducts();
+
+  })
 } // end of processOrder function
